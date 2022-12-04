@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
     <title>myGame</title>
     <style>
@@ -16,7 +16,7 @@
         }
 
         const MIN_COMPS = 10;
-        const MAX_COMPS = 50;
+        const MAX_COMPS = 15;
         const MIN_COMP_SPEED = -6;
         const MAX_COMP_SPEED = 6;
         const COMP_SIZE = 30;
@@ -36,7 +36,7 @@
                 var x_pos = (CANVAS_WIDTH - COMP_SIZE) * Math.random() + COMP_SIZE/2;
                 var y_pos = (CANVAS_HEIGHT - COMP_SIZE) * Math.random() + COMP_SIZE/2;
                 var myGamePiece = new component(COMP_SIZE, COMP_SIZE, "red", x_pos, x_pos);
-
+                debugger;
                 myGamePieces.push(myGamePiece);
             }
             
