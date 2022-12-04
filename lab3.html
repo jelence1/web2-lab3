@@ -5,7 +5,7 @@
     <style>
         canvas {
         border:1px solid #000000;
-        background-image: #f1f1f1;
+        background-color: #f1f1f1;
         }
     </style>
     <script>
@@ -33,9 +33,10 @@
 
         function startGame() {
             for (i = 0; i < components_left; i++) {
-                var x_pos = getRandomInt(0, Math.max(0, CANVAS_WIDTH - COMP_SIZE));
-                var y_pos = getRandomInt(0, Math.max(0, CANVAS_HEIGHT - COMP_SIZE));
+                var x_pos = (CANVAS_WIDTH - COMP_SIZE) * Math.random() + COMP_SIZE/2;
+                var y_pos = (CANVAS_HEIGHT - COMP_SIZE) * Math.random() + COMP_SIZE/2;
                 var myGamePiece = new component(COMP_SIZE, COMP_SIZE, "red", x_pos, x_pos);
+
                 myGamePieces.push(myGamePiece);
             }
             
@@ -56,6 +57,8 @@
                 document.body.insertBefore(this.canvas, document.body.childNodes[0]);
                 this.frameNo = 0;
                 this.interval = setInterval(updateGameArea, 20);
+
+                document.getElementById(this.canvas.id).addEventListener("click", checkClick);
             },
             stop : function() {
                 clearInterval(this.interval);
@@ -69,8 +72,8 @@
             this.type = type;
             this.width = width;
             this.height = height;
-            this.speed_x = getRandomInt(MIN_COMP_SPEED, MAX_COMP_SPEED);
-            this.speed_y = getRandomInt(MIN_COMP_SPEED, MAX_COMP_SPEED);
+            this.speed_x = (MAX_COMP_SPEED - MIN_COMP_SPEED) * Math.random() + MIN_COMP_SPEED;
+            this.speed_y = (MAX_COMP_SPEED - MIN_COMP_SPEED) * Math.random() + MIN_COMP_SPEED;
             this.x = x;
             this.y = y;
             this.update = function() {
@@ -83,18 +86,40 @@
             }
 
             this.newPos = function() {
-                if (this.x - this.width / 2 < 0)
-                    this.speed_x = 2;
-                else if ((this.x + this.width / 2) >= myGameArea.context.canvas.width)
-                    this.speed_x = -2;
+                var new_speed_x = (Math.random() + 0.5) * this.speed_x;
+                var new_speed_y = (Math.random() + 0.5) * this.speed_y;
 
-                if (this.y - this.height / 2 < 0)
-                    this.speed_y = -2;
-                else if ((this.y + this.height / 2) >= myGameArea.context.canvas.height)
-                    this.speed_y = 2;
+                if(Math.abs(new_speed_x) < MIN_COMP_SPEED){
+                    new_speed_x = MIN_COMP_SPEED * (new_speed_x / Math.abs(new_speed_x));
+                }
+                else if(Math.abs(new_speed_x) > MAX_COMP_SPEED){
+                    new_speed_x = MAX_COMP_SPEED * (new_speed_x / Math.abs(new_speed_x));
+                }
+
+                if(Math.abs(new_speed_y) < MIN_COMP_SPEED){
+                    new_speed_y = MIN_COMP_SPEED * (new_speed_y / Math.abs(new_speed_y));
+                }
+                else if(Math.abs(new_speed_y) > MAX_COMP_SPEED){
+                    new_speed_y = MAX_COMP_SPEED * (new_speed_y / Math.abs(new_speed_y));
+                }
+
+                if (this.x - this.width / 2 < 0) {
+                    this.speed_x = new_speed_x > 0 ? new_speed_x : -new_speed_x;
+                }
+                else if ((this.x + this.width / 2) >= myGameArea.context.canvas.width) {
+                    this.speed_x = new_speed_x > 0 ? -new_speed_x : new_speed_x;
+                }
+
+                if (this.y - this.height / 2 < 0) {
+                    this.speed_y = new_speed_y > 0 ? new_speed_y : -new_speed_y;
+                }
+                else if ((this.y + this.height / 2) >= myGameArea.context.canvas.height) {
+                    this.speed_y = new_speed_y > 0 ? -new_speed_y : new_speed_y;
+                }
 
                 this.x += this.speed_x;
-                this.y -= this.speed_y;
+                this.y += this.speed_y;
+
             }
         }
 
@@ -111,6 +136,9 @@
 
         }
 
+        function checkClick() {
+
+        }
 
         
     </script>
