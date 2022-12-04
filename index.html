@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>myGame</title>
+    <style>
+        canvas {
+        border:1px solid #000000;
+        background-color: #f1f1f1;
+        }
+    </style>
+    <script>
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
+        }
+
+        const MIN_COMPS = 10;
+        const MAX_COMPS = 50;
+        const MIN_COMP_SPEED = -6;
+        const MAX_COMP_SPEED = 6;
+        const COMP_SIZE = 30;
+        const CANVAS_WIDTH = 1200;
+        const CANVAS_HEIGHT = 600;
+        const TEXT_SIZE = 20;
+        const TEXT_POS_X = 800;
+        const TEXT_POS_Y = TEXT_SIZE;
+
+        var components_left = getRandomInt(MIN_COMPS, MAX_COMPS);
+        var components_clicked = 0;
+        
+        // var myGamePiece;
+        var myGamePieces = [];
+
+        function startGame() {
+            for (i = 0; i < components_left; i++) {
+                var x_pos = (CANVAS_WIDTH - COMP_SIZE) * Math.random() + COMP_SIZE/2;
+                var y_pos = (CANVAS_HEIGHT - COMP_SIZE) * Math.random() + COMP_SIZE/2;
+                var myGamePiece = new component(COMP_SIZE, COMP_SIZE, "red", x_pos, y_pos);
+                
+                myGamePieces.push(myGamePiece);
+            }
+            
+            myGameArea.start();
+        }
+
+        var myGameArea = {
+            canvas : document.createElement("canvas"),
+            start : function() {
+                this.canvas.id = "myGameCanvas";
+                this.canvas.width = CANVAS_WIDTH;
+                this.canvas.height = CANVAS_HEIGHT;
+                this.context = this.canvas.getContext("2d");
+                this.context.font = "20px Arial";
+                var txt = "Remaining: " + components_left + "  Clicked: " + components_clicked + "  Total: " +              (components_left + components_clicked);
+                this.context.fillText(txt, TEXT_POS_X, TEXT_POS_Y);
+
+                document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+                this.frameNo = 0;
+                this.interval = setInterval(updateGameArea, 20);
+
+                document.getElementById(this.canvas.id).addEventListener("click", (event) => checkClick(event.pageX, event.pageY));
+            },
+            stop : function() {
+                clearInterval(this.interval);
+            },
+            clear : function() {
+                this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
+
+        function component(width, height, color, x, y, type) {
+            this.type = type;
+            this.width = width;
+            this.height = height;
+            this.speed_x = (MAX_COMP_SPEED - MIN_COMP_SPEED) * Math.random() + MIN_COMP_SPEED;
+            this.speed_y = (MAX_COMP_SPEED - MIN_COMP_SPEED) * Math.random() + MIN_COMP_SPEED;
+            this.x = x;
+            this.y = y;
+            this.update = function() {
+                ctx = myGameArea.context;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = color;
+                ctx.fillRect(this.width / -2, this.height / -2, this.width, this.height);
+                ctx.restore();
+            }
+
+            this.newPos = function() {
+
+                var new_speed_x = (Math.random() + 0.5) * this.speed_x;
+                var new_speed_y = (Math.random() + 0.5) * this.speed_y;
+
+                if(Math.abs(new_speed_x) < MIN_COMP_SPEED){
+                    new_speed_x = MIN_COMP_SPEED * (new_speed_x / Math.abs(new_speed_x));
+                }
+                else if(Math.abs(new_speed_x) > MAX_COMP_SPEED){
+                    new_speed_x = MAX_COMP_SPEED * (new_speed_x / Math.abs(new_speed_x));
+                }
+
+                if(Math.abs(new_speed_y) < MIN_COMP_SPEED){
+                    new_speed_y = MIN_COMP_SPEED * (new_speed_y / Math.abs(new_speed_y));
+                }
+                else if(Math.abs(new_speed_y) > MAX_COMP_SPEED){
+                    new_speed_y = MAX_COMP_SPEED * (new_speed_y / Math.abs(new_speed_y));
+                }
+
+                if (this.x - this.width / 2 < 0) {
+                    this.speed_x = new_speed_x > 0 ? new_speed_x : -new_speed_x;
+                }
+                else if ((this.x + this.width / 2) >= myGameArea.context.canvas.width) {
+                    this.speed_x = new_speed_x > 0 ? -new_speed_x : new_speed_x;
+                }
+
+                if (this.y - this.height / 2 < 0) {
+                    this.speed_y = new_speed_y > 0 ? new_speed_y : -new_speed_y;
+                }
+                else if ((this.y + this.height / 2) >= myGameArea.context.canvas.height) {
+                    this.speed_y = new_speed_y > 0 ? -new_speed_y : new_speed_y;
+                }
+
+                this.x += this.speed_x;
+                this.y += this.speed_y;
+
+            }
+        }
+
+        function updateGameArea() {
+            myGameArea.clear();
+
+            for (i = 0; i < myGamePieces.length; i++) {
+                myGamePieces[i].newPos();
+                myGamePieces[i].update();
+            }
+
+            var txt = "Remaining: " + components_left + "  Clicked: " + components_clicked + "  Total: " +              (components_left + components_clicked);
+            myGameArea.context.fillText(txt, TEXT_POS_X, TEXT_POS_Y);
+
+            if (components_left == 0) {
+                txt = "Congrats! You have clicked on all the components.";
+                myGameArea.context.fillText(txt, myGameArea.canvas.width/2 - 100, myGameArea.canvas.height/2);
+                txt = "Refresh the page to restart the game.";
+                myGameArea.context.fillText(txt, myGameArea.canvas.width/2 - 100, myGameArea.canvas.height/2 + TEXT_SIZE);
+            }
+
+        }
+
+        function checkHit(comp, mouse_x, mouse_y) {
+            console.log("comp: " + comp.x + "  " + comp.y);
+            console.log("mouse: " + mouse_x + "  " + mouse_y);
+            console.log("x uvjet: " + mouse_x >= comp.x - comp.width/2 && mouse_x <= comp.x + comp.width/2);
+            console.log("y uvjet: " + mouse_y >= comp.y - comp.height/2 && mouse_y <= comp.y + comp.height/2);
+            // debugger;
+            if ((mouse_x >= comp.x - comp.width/2 && mouse_x <= comp.x + comp.width/2) && 
+            (mouse_y >= comp.y - comp.height/2 && mouse_y <= comp.y + comp.height/2)) 
+                return true;
+            else 
+                return false;
+            
+        }
+
+        function checkClick(mouse_x, mouse_y) {
+            // debugger;
+            myGamePieces.forEach((comp) => {
+                if (checkHit(comp, mouse_x, mouse_y) == true) {
+                    for (i = 0; i < myGamePieces.length; i++) {
+                        if (myGamePieces[i] == comp) {
+                            if (comp.type !== "RESTART") {
+                            myGamePieces.splice(i, 1);
+                            components_clicked++;
+                            components_left--;
+                            }
+                            else {
+                                location.reload();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        
+    </script>
+    </head>
+
+    <body onload="startGame()">
+    </body>
+
+</html>
